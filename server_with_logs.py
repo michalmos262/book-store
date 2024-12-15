@@ -1,10 +1,30 @@
-from flask import Flask, request, g as app_ctx
-import time
 import logging
 import os
+import time
+import psycopg2
 
+from pymongo import MongoClient
+
+from flask import Flask, request, g as app_ctx
+
+# Database configuration
+POSTGRES_DB_USER = "postgres"
+POSTGRES_DB_PASSWORD = "docker"
+DB_HOST = "localhost"
+POSTGRES_DB_PORT = "5432"
+DB_NAME = "books"
+DB_TABLE_NAME = "books"
+
+postgres_db_connection = psycopg2.connect(database=DB_NAME,
+                                          user=POSTGRES_DB_USER,
+                                          host=DB_HOST,
+                                          password=POSTGRES_DB_PASSWORD,
+                                          port=POSTGRES_DB_PORT)
+
+mongo_client = MongoClient('mongodb://localhost:27017/')
+
+# Application configuration
 app = Flask(__name__)
-
 HOST = "0.0.0.0"
 PORT = 8574
 
