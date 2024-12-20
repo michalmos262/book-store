@@ -1,5 +1,5 @@
 class BookDTO:
-    def __init__(self, id: int, title: str, author: str, year: int, price: int, genres: list):
+    def __init__(self, id: int | None, title: str, author: str, year: int, price: int, genres: list):
         self.id = id
         self.title = title
         self.author = author
