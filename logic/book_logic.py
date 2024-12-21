@@ -12,7 +12,7 @@ class BookLogic:
     def create_book(self, book_dto: BookDTO):
         book: BookDTO = self.postgres_book_repository.create_book(
             BookDTO(
-                id=self.books_counter+1,
+                id=self.books_counter + 1,
                 title=book_dto.title,
                 author=book_dto.author,
                 year=book_dto.year,
@@ -43,5 +43,9 @@ class BookLogic:
     def delete_book_by_id(self, id):
         return self.postgres_book_repository.delete_book_by_id(id)
 
-    def get_filtered_books(self, filter_parameters: BookFilterParametersDTO, persistence_method: PersistenceMethod):
-        return NotImplemented
+    def get_filtered_books(self, book_filter_parameters: BookFilterParametersDTO,
+                           persistence_method: PersistenceMethod):
+        if persistence_method == PersistenceMethod.POSTGRES:
+            return self.postgres_book_repository.get_books(book_filter_parameters)
+        elif persistence_method == PersistenceMethod.MONGO:
+            return NotImplemented

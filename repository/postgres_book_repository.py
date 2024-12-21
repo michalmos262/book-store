@@ -1,6 +1,9 @@
 import ast
+from operator import and_
+from typing import List
 
 from dto.book_dto import BookDTO
+from dto.book_filter_parameters_dto import BookFilterParametersDTO
 from repository.abstract_book_repository import AbstractBookRepository
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -39,8 +42,20 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-def convert_genres_list_to_str(self, genres: list) -> str:
+def convert_genres_list_to_str(genres: list) -> str:
     return f'["{",".join(map(str, genres))}"]'
+
+
+def get_book_dto(book: Book) -> BookDTO | None:
+    if book is None:
+        return None
+
+    return BookDTO(id=book.rawid,
+                   title=book.title,
+                   author=book.author,
+                   year=book.year,
+                   price=book.price,
+                   genres=ast.literal_eval(book.genres))
 
 
 class PostgresBookRepository(AbstractBookRepository):
@@ -57,40 +72,54 @@ class PostgresBookRepository(AbstractBookRepository):
         session.add(new_book)
         session.commit()
 
-        # Convert the string to a list
-        genres_list = ast.literal_eval(new_book.genres)
-
-        return BookDTO(id=new_book.rawid,
-                       title=new_book.title,
-                       author=new_book.author,
-                       year=new_book.year,
-                       price=new_book.price,
-                       genres=genres_list)
+        return get_book_dto(new_book)
 
     def get_books_total(self) -> int:
         return session.query(Book).count()
 
-    def get_book_dto(self, book: Book) -> BookDTO | None:
-        if book is None:
-            return None
-
-        return BookDTO(id=book.rawid,
-                       title=book.title,
-                       author=book.author,
-                       year=book.year,
-                       price=book.price,
-                       genres=book)
-
     def get_book_by_title(self, title: str) -> BookDTO | None:
         book: Book | None = session.query(Book).filter(Book.title.ilike(title)).first()
-        return self.get_book_dto(book)
+        return get_book_dto(book)
 
     def get_book_by_id(self, id: int) -> BookDTO | None:
         book: Book | None = session.query(Book).filter(Book.rawid == id).first()
-        return self.get_book_dto(book)
+        return get_book_dto(book)
 
     def delete_book_by_id(self, id: int) -> None:
-        existing_book = session.query(Book).filter(Book.rawid == id).first()
+        existing_book: Book | None = session.query(Book).filter(Book.rawid == id).first()
         if existing_book:
             session.delete(existing_book)
             session.commit()
+
+    def get_books(self, book_filter_parameters: BookFilterParametersDTO) -> List[BookDTO]:
+        query = session.query(Book)
+
+        # Add filters dynamically
+        if book_filter_parameters.author:
+            query = query.filter(Book.author.ilike(f"%{book_filter_parameters.author}%"))
+
+        if book_filter_parameters.price_bigger_than is not None:
+            query = query.filter(Book.price > book_filter_parameters.price_bigger_than)
+
+        if book_filter_parameters.price_less_than is not None:
+            query = query.filter(Book.price < book_filter_parameters.price_less_than)
+
+        if book_filter_parameters.year_bigger_than is not None:
+            query = query.filter(Book.year > book_filter_parameters.year_bigger_than)
+
+        if book_filter_parameters.year_less_than is not None:
+            query = query.filter(Book.year < book_filter_parameters.year_less_than)
+
+        if book_filter_parameters.genres:
+            genre_filters = [Book.genres.contains(genre) for genre in book_filter_parameters.genres]
+            query = query.filter(and_(*genre_filters))
+
+        # Execute the query and fetch results
+        filtered_books: List[Book] = query.all()  # Corrected type hint
+
+        # Map to DTOs
+        filtered_books_dto = [
+            get_book_dto(filtered_book) for filtered_book in filtered_books
+        ]
+
+        return filtered_books_dto

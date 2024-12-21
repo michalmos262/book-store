@@ -100,33 +100,26 @@ class BookController:
             genres = request.args.get('genres')
             persistence_method = get_persistence_method()
 
-            filtered_books = []
-            response = {}
-
+            # if genres was inserted not properly, case-sensitive
             if genres is not None:
                 genres = list(genres.split(','))
+                if not all(genre in Genres for genre in genres):
+                    return 400
 
             book_filter_params_dto = BookFilterParametersDTO(
-                author=author,
-                price_bigger_than=int(price_bigger_than),
-                price_less_than=int(price_less_than),
-                year_bigger_than=int(year_bigger_than),
-                year_less_than=int(year_less_than),
-                genres=genres)
+                author=author if author else None,
+                price_bigger_than=int(price_bigger_than) if price_bigger_than else None,
+                price_less_than=int(price_less_than) if price_less_than else None,
+                year_bigger_than=int(year_bigger_than) if year_bigger_than else None,
+                year_less_than=int(year_less_than) if year_less_than else None,
+                genres=genres if genres else None
+            )
 
-            existing_books = self.book_logic.get_filtered_books(book_filter_params_dto, persistence_method)
-
-            for book in existing_books:
-                if genres is not None:
-                    if not all(genre in Genres for genre in genres):
-                        return 400
-                    if not set(genres) & set(book.genres):
-                        continue
-                filtered_books.append(book)
-
+            filtered_books = self.book_logic.get_filtered_books(book_filter_params_dto, persistence_method)
             filtered_books.sort(key=lambda filtered_book: filtered_book.title.lower())
 
-            response[RESULT_KEY] = []
+            response = {RESULT_KEY: []}
+
             for filtered_book in filtered_books:
                 response[RESULT_KEY].append(filtered_book.__dict__)
 
