@@ -1,3 +1,0 @@
-18-06-2024 16:22:15.615 INFO: Incoming request | #1 | resource: /books/health | HTTP Verb GET | request #1
-18-06-2024 16:22:15.666 INFO: Incoming request | #2 | resource: /favicon.ico | HTTP Verb GET | request #2
-18-06-2024 16:28:13.157 INFO: Incoming request | #1 | resource: /books/health | HTTP Verb GET | request #1

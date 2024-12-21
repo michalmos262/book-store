@@ -13,7 +13,7 @@ class BookLogic:
 
     def create_book(self, book_dto: BookDTO):
         book_creation_dto = BookDTO(
-                id=self.books_counter + 1,
+                id=self.books_counter+1,
                 title=book_dto.title,
                 author=book_dto.author,
                 year=book_dto.year,
