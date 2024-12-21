@@ -18,12 +18,12 @@ me.connect(DB_NAME, host=f"mongodb://{HOSTNAME}:{PORT}/{DB_NAME}")
 class Book(me.Document):
     meta = {'collection': DB_TABLE_NAME}
 
-    rawid = me.IntField(primary_key=True)
+    rawid = me.IntField(required=True)
     title = me.StringField(required=True)
     author = me.StringField(required=True)
     year = me.IntField(required=True)
     price = me.IntField(required=True)
-    genres = me.ListField(me.StringField(), required=True)
+    genres = me.StringField(required=True)
 
     # Ensure genres are always in uppercase when saving
     def save(self, *args, **kwargs):
@@ -48,7 +48,7 @@ def get_book_dto(book: Book) -> BookDTO | None:
         author=book.author,
         year=book.year,
         price=book.price,
-        genres=book.genres  # No need to use ast.literal_eval anymore
+        genres=book.genres
     )
 
 
@@ -66,6 +66,16 @@ class MongoBookRepository(AbstractBookRepository):
         new_book.save()
         return get_book_dto(new_book)
 
+    def update_book_price(self, book_id: int, new_price: int) -> None:
+        # Find the book by rawid (unique identifier)
+        book = Book.objects(rawid=book_id).first()
+
+        # If the book is found, update the price
+        if book:
+            book.update(set__price=new_price)
+        else:
+            return None
+
     def get_books_total(self) -> int:
         return Book.objects.count()
 
@@ -74,7 +84,7 @@ class MongoBookRepository(AbstractBookRepository):
         return get_book_dto(book)
 
     def get_book_by_id(self, id: int) -> BookDTO | None:
-        book = Book.objects(rawid=id).first()  # Use rawid for querying by primary key
+        book = Book.objects(rawid=id).first()
         return get_book_dto(book)
 
     def delete_book_by_id(self, id: int) -> bool:

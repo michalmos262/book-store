@@ -129,7 +129,7 @@ class BookController:
         def get_book():
             book_id = int(request.args.get('id'))
             status = 200
-            existing_book = self.book_logic.get_book_by_id(book_id, get_persistence_method())
+            existing_book: BookDTO = self.book_logic.get_book_by_id(book_id, get_persistence_method())
 
             if existing_book.id == book_id:
                 response = {RESULT_KEY: existing_book.__dict__}
@@ -144,7 +144,7 @@ class BookController:
             new_price = int(request.args.get('price'))
             response = {}
             status = 200
-            existing_book = self.book_logic.get_book_by_id(book_id, get_persistence_method())
+            existing_book = self.book_logic.get_book_by_id(book_id, PersistenceMethod.POSTGRES)
 
             if existing_book is not None:
                 if new_price < 0:
@@ -153,7 +153,7 @@ class BookController:
                     status = 409
                 else:
                     response[RESULT_KEY] = existing_book.price
-                    existing_book.price = new_price
+                    self.book_logic.update_book_price(book_id, new_price)
 
             if len(response) == 0:
                 response, status = get_book_not_found_error(book_id)

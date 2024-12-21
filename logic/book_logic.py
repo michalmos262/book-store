@@ -26,6 +26,10 @@ class BookLogic:
         self.books_counter += 1
         return postgres_book
 
+    def update_book_price(self, book_id: int, price: int):
+        self.postgres_book_repository.update_book_price(book_id, price)
+        self.mongo_book_repository.update_book_price(book_id, price)
+
     def get_book_by_id(self, id, persistence_method: PersistenceMethod):
         if persistence_method == PersistenceMethod.POSTGRES:
             return self.postgres_book_repository.get_book_by_id(id)

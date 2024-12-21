@@ -9,6 +9,9 @@ class AbstractBookRepository(ABC):
     def create_book(self, book_dto: BookDTO) -> BookDTO:
         return NotImplemented
 
+    def update_book_price(self, book_id: int, new_price: int) -> int | None:
+        return NotImplemented
+
     def get_book_by_id(self, id: int) -> BookDTO:
         return NotImplemented
 

@@ -8,6 +8,7 @@ from repository.abstract_book_repository import AbstractBookRepository
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import NoResultFound
 
 # Database configuration
 USERNAME = "postgres"
@@ -73,6 +74,16 @@ class PostgresBookRepository(AbstractBookRepository):
         session.commit()
 
         return get_book_dto(new_book)
+
+    def update_book_price(self, book_id: int, new_price: int) -> None:
+        try:
+            book = session.query(Book).filter(Book.rawid == book_id).one()
+            book.price = new_price
+            session.commit()
+
+        except NoResultFound:
+            # Return None or handle it as per the requirement when the book is not found
+            return None
 
     def get_books_total(self) -> int:
         return session.query(Book).count()
