@@ -11,7 +11,7 @@ services:
     ports:
       - "27017:27017"
   app:
-    image: michalmos/server-with-logs:latest
+    image: michalmos/book-store:latest
     restart: on-failure:2
     ports:
       - "4785:8574"
