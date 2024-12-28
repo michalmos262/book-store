@@ -18,7 +18,7 @@ services:
     image: michalmos/book-store:latest
     restart: on-failure
     ports:
-      - "4785:8574" # Map internal app port to the external one
+      - "4785:8574"  # Map internal app port to the external one
     depends_on:
       - postgres
       - mongo
