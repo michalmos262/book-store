@@ -9,21 +9,10 @@ class BookLogic:
     def __init__(self):
         self.postgres_book_repository = PostgresBookRepository()
         self.mongo_book_repository = MongoBookRepository()
-        self.books_counter = self.postgres_book_repository.get_books_total()
 
     def create_book(self, book_dto: BookDTO):
-        book_creation_dto = BookDTO(
-                id=self.books_counter+1,
-                title=book_dto.title,
-                author=book_dto.author,
-                year=book_dto.year,
-                price=book_dto.price,
-                genres=book_dto.genres)
-
-        postgres_book: BookDTO = self.postgres_book_repository.create_book(book_creation_dto)
-        self.mongo_book_repository.create_book(book_creation_dto)
-
-        self.books_counter += 1
+        postgres_book: BookDTO = self.postgres_book_repository.create_book(book_dto)
+        self.mongo_book_repository.create_book(book_dto)
         return postgres_book
 
     def update_book_price(self, book_id: int, price: int):
