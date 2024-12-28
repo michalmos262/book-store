@@ -2,7 +2,6 @@ import mongoengine as me
 from typing import List
 from dto.book_dto import BookDTO
 from dto.book_filter_parameters_dto import BookFilterParametersDTO
-from dto.genres_dto import convert_string_to_genres_list
 from repository.abstract_book_repository import AbstractBookRepository
 
 # Database configuration
