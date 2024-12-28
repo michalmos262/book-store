@@ -5,7 +5,8 @@ from dto.book_filter_parameters_dto import BookFilterParametersDTO
 from repository.abstract_book_repository import AbstractBookRepository
 
 # Database configuration
-HOSTNAME = "localhost"
+HOSTNAME = "mongo"
+# HOSTNAME = "localhost"
 PORT = "27017"
 DB_NAME = "books"
 DB_TABLE_NAME = "books"
@@ -23,18 +24,7 @@ class Book(me.Document):
     author = me.StringField(required=True)
     year = me.IntField(required=True)
     price = me.IntField(required=True)
-    genres = me.StringField(required=True)
-
-    # Ensure genres are always in uppercase when saving
-    def save(self, *args, **kwargs):
-        # Convert genres to uppercase before saving
-        self.genres = [genre.upper() for genre in self.genres]
-        super().save(*args, **kwargs)
-
-
-# Convert genres list to a proper list of uppercase strings
-def convert_genres_list_to_str(genres: List[str]) -> List[str]:
-    return [genre.upper() for genre in genres]
+    genres = me.ListField(me.StringField(), required=True)
 
 
 # Convert book to DTO
@@ -53,17 +43,23 @@ def get_book_dto(book: Book) -> BookDTO | None:
 
 
 class MongoBookRepository(AbstractBookRepository):
+    def __init__(self):
+        self.books_counter = Book.objects.count()
+
     def create_book(self, book_dto: BookDTO) -> BookDTO:
         # Insert data into MongoDB
         new_book = Book(
-            rawid=book_dto.id,
+            rawid=self.books_counter+1,
             title=book_dto.title,
             author=book_dto.author,
             year=book_dto.year,
             price=book_dto.price,
-            genres=convert_genres_list_to_str(book_dto.genres)
+            genres=book_dto.genres
         )
+
         new_book.save()
+        self.books_counter += 1
+
         return get_book_dto(new_book)
 
     def update_book_price(self, book_id: int, new_price: int) -> None:
@@ -96,7 +92,7 @@ class MongoBookRepository(AbstractBookRepository):
 
         # Add filters dynamically
         if book_filter_parameters.author:
-            query["author__icontains"] = book_filter_parameters.author
+            query["author__iexact"] = book_filter_parameters.author
 
         if book_filter_parameters.price_bigger_than is not None:
             query["price__gt"] = book_filter_parameters.price_bigger_than
@@ -110,14 +106,13 @@ class MongoBookRepository(AbstractBookRepository):
         if book_filter_parameters.year_less_than is not None:
             query["year__lt"] = book_filter_parameters.year_less_than
 
-        if book_filter_parameters.genres:
-            query["genres__in"] = [genre.upper() for genre in
-                                   book_filter_parameters.genres]  # Ensure genres are uppercase
+        if book_filter_parameters.genres is not None:
+            query["genres__in"] = [genre.upper() for genre in book_filter_parameters.genres]
 
         # Execute the query and fetch results
-        filtered_books = Book.objects(**query)
+        filtered_without_genres_books = Book.objects(**query)
 
         # Map to DTOs
-        filtered_books_dto = [get_book_dto(book) for book in filtered_books]
+        filtered_books_dto = [get_book_dto(book) for book in filtered_without_genres_books]
 
         return filtered_books_dto

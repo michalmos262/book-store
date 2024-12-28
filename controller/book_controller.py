@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 from dto.book_dto import BookDTO
 from dto.book_filter_parameters_dto import BookFilterParametersDTO
@@ -104,7 +104,7 @@ class BookController:
             if genres is not None:
                 genres = list(genres.split(','))
                 if not all(genre in Genres for genre in genres):
-                    return 400
+                    return jsonify({"error": "Invalid genres provided"}), 400
 
             book_filter_params_dto = BookFilterParametersDTO(
                 author=author if author else None,
